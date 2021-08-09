@@ -7,7 +7,7 @@ A new Flutter package project to send smtp mails when exceptions are thrown.
 Add the package on pubspec.yaml file of the project
 
 ```yaml
-chat_widget:
+exception_catcher:
   git:
     url: git://github.com/gvillegasc/exception_catcher
     ref: master
