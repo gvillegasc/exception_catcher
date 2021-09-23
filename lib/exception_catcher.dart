@@ -19,6 +19,7 @@ class ExceptionCatcher {
     @required this.recipient,
     @required this.ccRecipients,
     this.sendInDebug = false,
+    this.ignoreErrors,
   }) {
     exceptionCatcher();
   }
@@ -30,23 +31,25 @@ class ExceptionCatcher {
   final String recipient;
   final List<String> ccRecipients;
   final bool sendInDebug;
+  final List<String> ignoreErrors;
 
   void exceptionCatcher() async {
     runZonedGuarded(() {
       runApp(rootWidget);
     }, (Object error, StackTrace stack) async {
-      if (kReleaseMode || sendInDebug) {
-        final body = stack.toString().replaceAll('#', '<br>#');
-        // ignore: deprecated_member_use
-        final smtpServer = gmail(username, password);
-        final appInfo = await getAppInfo();
-        final deviceInfo = await getDeviceInfo();
-        final message = Message()
-          ..from = Address(username, subject)
-          ..recipients.add(recipient)
-          ..ccRecipients.addAll(ccRecipients)
-          ..subject = '${error.toString()} ${DateTime.now()}'
-          ..html = '''              
+      if (!ignoreErrors.contains(error.toString().trim())) {
+        if (kReleaseMode || sendInDebug) {
+          final body = stack.toString().replaceAll('#', '<br>#');
+          // ignore: deprecated_member_use
+          final smtpServer = gmail(username, password);
+          final appInfo = await getAppInfo();
+          final deviceInfo = await getDeviceInfo();
+          final message = Message()
+            ..from = Address(username, subject)
+            ..recipients.add(recipient)
+            ..ccRecipients.addAll(ccRecipients)
+            ..subject = '${error.toString()} ${DateTime.now()}'
+            ..html = '''              
               <p>
                 ---------------------
                 <br>ERROR<br>
@@ -77,14 +80,16 @@ class ExceptionCatcher {
                 $deviceInfo
               </p>
               ''';
-        try {
-          final sendReport = await send(message, smtpServer);
-          print('Message sent: ${sendReport.toString()}');
-        } on MailerException catch (e) {
-          print('Message not sent.');
-          print(e.message);
+          try {
+            final sendReport = await send(message, smtpServer);
+            print('Message sent: ${sendReport.toString()}');
+          } on MailerException catch (e) {
+            print('Message not sent.');
+            print(e.message);
+          }
         }
       }
+
       print('========Error=========');
       print(error);
       print('========Stack=========');
