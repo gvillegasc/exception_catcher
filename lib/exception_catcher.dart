@@ -12,16 +12,16 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 class ExceptionCatcher {
   ExceptionCatcher({
-    @required this.rootWidget,
-    @required this.username,
-    @required this.subject,
-    @required this.password,
-    @required this.recipient,
-    @required this.ccRecipients,
+    required this.rootWidget,
+    required this.username,
+    required this.subject,
+    required this.password,
+    required this.recipient,
+    required this.ccRecipients,
     this.sendInDebug = false,
     this.ignoreErrors,
   }) {
-    exceptionCatcher();
+    exceptionCatcher(ignoreErrors ?? []);
   }
 
   final Widget rootWidget;
@@ -31,13 +31,13 @@ class ExceptionCatcher {
   final String recipient;
   final List<String> ccRecipients;
   final bool sendInDebug;
-  final List<String> ignoreErrors;
+  final List<String>? ignoreErrors;
 
-  void exceptionCatcher() async {
+  void exceptionCatcher(List<String> errors) async {
     runZonedGuarded(() {
       runApp(rootWidget);
     }, (Object error, StackTrace stack) async {
-      if (!ignoreErrors.contains(error.toString().trim())) {
+      if (!errors.contains(error.toString().trim())) {
         if (kReleaseMode || sendInDebug) {
           final body = stack.toString().replaceAll('#', '<br>#');
           // ignore: deprecated_member_use
